@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FPDF 中文扩展库 · 使用说明书（A4）</title>
+<style>
+  :root{
+    --ink:#1f2933;
+    --muted:#52606d;
+    --accent:#0b6bcb;
+    --line:#d9e2ec;
+    --code-bg:#f4f6f8;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",
+      "Source Han Sans SC","Noto Sans CJK SC",Arial,sans-serif;
+    color:var(--ink);
+    line-height:1.7;
+    font-size:12.5px;
+    background:#eef2f6;
+  }
+  .page{
+    width:210mm;
+    min-height:297mm;
+    margin:12mm auto;
+    padding:18mm 16mm;
+    background:#fff;
+    box-shadow:0 2px 14px rgba(0,0,0,.12);
+  }
+  h1{font-size:23px;margin:0 0 4px;color:var(--accent);}
+  h2{font-size:16px;margin:22px 0 8px;padding-bottom:5px;
+     border-bottom:2px solid var(--accent);color:var(--accent);}
+  h3{font-size:13.5px;margin:14px 0 6px;color:var(--ink);}
+  p{margin:6px 0;}
+  ul,ol{margin:6px 0 6px 22px;padding:0;}
+  li{margin:3px 0;}
+  code{background:var(--code-bg);border:1px solid var(--line);
+    border-radius:4px;padding:1px 5px;font-family:"Consolas",monospace;
+    font-size:11.5px;color:#b4361b;}
+  pre{background:var(--code-bg);border:1px solid var(--line);
+    border-left:4px solid var(--accent);border-radius:6px;
+    padding:10px 12px;overflow:auto;font-size:11px;line-height:1.5;
+    font-family:"Consolas",monospace;color:#333;white-space:pre;}
+  table{border-collapse:collapse;width:100%;margin:8px 0;font-size:11.8px;}
+  th,td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left;}
+  th{background:#eaf2fb;color:var(--accent);font-weight:600;}
+  tr:nth-child(even) td{background:#fafcfe;}
+  .meta{color:var(--muted);font-size:11.5px;margin:2px 0 0;}
+  .note{background:#fff8e6;border:1px solid #f3d98b;border-radius:6px;
+    padding:8px 12px;margin:10px 0;color:#7a5a00;}
+  .good{background:#eef8ee;border:1px solid #b7dfb9;border-radius:6px;
+    padding:8px 12px;margin:10px 0;color:#1e5c22;}
+  .sec-break{page-break-before:always;}
+  .tag{display:inline-block;background:var(--accent);color:#fff;
+    border-radius:4px;padding:1px 7px;font-size:10.5px;margin-right:6px;}
+  @media print{
+    @page{ size:A4; margin:16mm 14mm; }
+    body{background:#fff;font-size:12px;}
+    .page{width:auto;min-height:auto;margin:0;padding:0;box-shadow:none;}
+    h2{break-after:avoid;}
+    table,pre,blockquote{break-inside:avoid;}
+    a{color:var(--ink);text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>FPDF 中文扩展库 · 使用说明书</h1>
+  <p class="meta">
+    版本：FPDF <b>1.84</b> + <code>PDF_Chinese</code> 中文扩展（兼容性修复版 + UTF-8/TTF 内嵌字体版）<br>
+    适用 PHP：<b>5.5 ~ 8.3</b>（已实测 PHP 8.3 <code>E_ALL</code> 零告警生成 PDF）<br>
+    原始作者：Olivier PLATHEY（FPDF） / yujianyue（中文扩展）
+  </p>
+
+  <h2>1. 这是什么</h2>
+  <p>本库由三部分组成，提供两条中文输出路线：</p>
+  <table>
+    <tr><th>文件</th><th>作用</th></tr>
+    <tr><td><code>fpdf.php</code></td><td>FPDF 核心库：纯 PHP 实现的 PDF 生成器，不依赖任何外部 PDF 组件</td></tr>
+    <tr><td><code>chinese.php</code></td><td><code>PDF_Chinese</code> 中文扩展：保留 GB/Big5 CID 方案，新增 <b>UTF-8 + 内嵌字体</b> 方案</td></tr>
+    <tr><td><code>ttf.php</code></td><td><code>TTFontSubsetter</code>：纯 PHP 的 TrueType/OpenType 解析与子集化器</td></tr>
+  </table>
+  <table>
+    <tr><th>路线</th><th>编码</th><th>内嵌字体</th><th>体积</th><th>阅读端要求</th></tr>
+    <tr><td><b>A. 内嵌 TrueType（推荐）</b></td><td><b>UTF-8 原生</b></td><td>✅ 子集化内嵌</td><td>几十 KB</td><td>无任何要求</td></tr>
+    <tr><td>B. CID 引用（GB/Big5）</td><td>GBK / Big5</td><td>❌ 不内嵌</td><td>极小</td><td>需 Adobe 亚洲字体</td></tr>
+  </table>
+  <div class="good">
+    <b>路线 A 是本版重点升级：</b>不再依赖阅读器字体、中英文显示一致、UTF-8 原生输入输出（无需 <code>iconv</code>），详见第 5 节。
+  </div>
+
+  <h2>2. 环境要求</h2>
+  <table>
+    <tr><th>项目</th><th>要求</th><th>说明</th></tr>
+    <tr><td>PHP</td><td>≥ 5.5</td><td>已验证 5.5 / 7.0 / 7.4 / 8.0 / 8.1 / 8.2 / 8.3</td></tr>
+    <tr><td>zlib</td><td>可选</td><td>开启后自动压缩 PDF 内容与内嵌字体流（默认开启）</td></tr>
+    <tr><td>GD</td><td>可选</td><td>仅 <code>Image()</code> 嵌入 GIF 时需要；JPEG/PNG 不需要</td></tr>
+    <tr><td>字体文件</td><td>路线 A 需要</td><td>一个含中文字形的 <code>.ttf</code> / <code>.otf</code> / <code>.ttc</code>（如文泉驿微米黑）</td></tr>
+    <tr><td><code>font/</code> 目录</td><td>仅核心字体需要</td><td>官方 FPDF 的 14 个核心字体度量 .php 文件</td></tr>
+  </table>
+  <p class="note">路线 A（<code>AddFontTTF</code>）与路线 B（<code>AddGBFont</code>）都<b>不需要</b> <code>font/</code> 目录；<code>ttf.php</code> 纯 PHP 实现，不依赖 <code>mbstring</code> / <code>intl</code>。</p>
+
+  <div class="sec-break"></div>
+  <h2>3. 快速开始</h2>
+  <h3>3.1 中文 PDF（内嵌 TrueType · UTF-8 原生 · 推荐）</h3>
+  <pre>&lt;?php
+require('fpdf.php');
+require('chinese.php');
+
+$pdf = new PDF_Chinese();
+$pdf-&gt;AddFontTTF('wqy', '', 'fonts/wqy-microhei.ttf');  // 注册内嵌字体
+$pdf-&gt;AddPage();
+$pdf-&gt;SetFont('wqy', '', 20);
+$pdf-&gt;Cell(0, 12, '中文 UTF-8 原生输入，无需 iconv');     // 直接传 UTF-8
+$pdf-&gt;Ln(16);
+$pdf-&gt;SetFont('wqy', '', 12);
+$pdf-&gt;MultiCell(0, 8, '中英混排 Mixed text 自动换行。');
+$pdf-&gt;Output('F', 'demo.pdf');
+
+// 验证：pdffonts demo.pdf  →  emb=yes sub=yes uni=yes</pre>
+
+  <h3>3.2 从内存字节注册字体</h3>
+  <pre>$bytes = file_get_contents('fonts/wqy-microhei.ttf');   // 或从数据库/远端读取
+$pdf-&gt;AddFontFromStream('wqy', '', $bytes);
+$pdf-&gt;SetFont('wqy', '', 14);</pre>
+
+  <h3>3.3 中文 PDF（CID 引用 · GBK 编码 · 旧方案）</h3>
+  <pre>$pdf = new PDF_Chinese();
+$pdf-&gt;AddGBFont();
+$pdf-&gt;AddPage();
+$pdf-&gt;SetFont('GB', '', 20);
+$pdf-&gt;Cell(0, 12, iconv('UTF-8', 'GBK', '中文测试标题'));
+$pdf-&gt;Output('D', 'demo.pdf');</pre>
+
+  <h2>4. 核心 API</h2>
+  <table>
+    <tr><th>方法</th><th>说明</th></tr>
+    <tr><td><code>AddFontTTF($family,$style='',$file='',$subset=true)</code></td><td><b>新增</b>：从字体文件注册内嵌字体（.ttf/.otf/.ttc，TTC 取第 0 个）</td></tr>
+    <tr><td><code>AddFontFromStream($family,$style='',$data='',$subset=true)</code></td><td><b>新增</b>：从内存字节注册内嵌字体</td></tr>
+    <tr><td><code>AddPage($o='', $s='', $r=0)</code></td><td>新增一页，可选方向(L/P)、尺寸、旋转</td></tr>
+    <tr><td><code>SetFont($family,$style='',$size=0)</code></td><td>设置字体；内嵌 family / 核心字体 / GB / Big5</td></tr>
+    <tr><td><code>Cell / MultiCell / Write / GetStringWidth</code></td><td>内嵌字体与中文自动切换处理，调用方式不变</td></tr>
+    <tr><td><code>Ln / SetXY / Image / Line / Rect</code></td><td>排版与绘图</td></tr>
+    <tr><td><code>SetMargins / SetAutoPageBreak</code></td><td>页边距 / 自动分页</td></tr>
+    <tr><td><code>SetTitle/SetAuthor/SetSubject/SetKeywords</code></td><td>文档元数据</td></tr>
+    <tr><td><code>AliasNbPages($a='{nb}')</code></td><td>总页数占位符（页脚用）</td></tr>
+    <tr><td><code>Output($d='',$n='',$u=false)</code></td><td>I 内联 / D 下载 / F 存文件 / S 返回字符串</td></tr>
+  </table>
+
+  <h2>5. UTF-8 + 内嵌字体：原理与限制</h2>
+  <table>
+    <tr><th>痛点（旧方案）</th><th>本方案</th></tr>
+    <tr><td>依赖阅读端 Adobe 亚洲字体，缺字体出方块</td><td>字体<b>子集化后内嵌</b>进 PDF，任何设备显示一致</td></tr>
+    <tr><td>UTF-8 源码必须先 <code>iconv('UTF-8','GBK',...)</code></td><td><b>UTF-8 原生输入输出</b>，直接传字符串</td></tr>
+    <tr><td>断行按“非 ASCII 即 2 字节”假设，混排不精确</td><td>按<b>码点（grapheme）</b>计算宽度与断行，支持 1–4 字节（含 emoji 码点）</td></tr>
+  </table>
+  <ul>
+    <li><b>编码</b>：<code>Identity-H</code> Type0 复合字体；glyf 轮廓 → <code>FontFile2</code>+<code>CIDFontType2</code>（紧凑子集）；CFF 轮廓 → <code>FontFile3</code>+<code>CIDFontType0C</code>。</li>
+    <li><b>两遍渲染</b>：构建期写占位符并收集码点，<code>Output()</code> 前子集化并回填内容流。</li>
+    <li><b>ToUnicode</b> 自动生成，文字可复制、可检索（<code>uni=yes</code>）。</li>
+    <li><b>断行</b>：CJK/全角/谚文/emoji 逐字可断；Latin 按空格断。</li>
+    <li><b>缺字行为</b>：字体没有的字形留空显示，不报错、不影响其他字符。</li>
+  </ul>
+  <div class="note">
+    <b>字体选择建议：</b>优先使用 <b>TrueType（glyf）轮廓</b>的中文字体（如文泉驿微米黑/正黑），子集化后仅几十 KB；
+    OpenType/CFF 字体（Noto CJK、思源系列）当前为<b>整字体嵌入</b>（未做 CFF 子集化），可能达 10MB+。
+    另：TTC 取第 0 个字体；不支持竖排与复杂文本整形；内嵌前请确认字体许可允许嵌入。
+  </div>
+
+  <div class="sec-break"></div>
+  <h2>6. 安全与加固（本版）</h2>
+  <table>
+    <tr><th>风险点</th><th>修复后</th></tr>
+    <tr><td>null 字节注入</td><td>Image / Output('F') / AddFont / _loadfont 拦截含 <code>\0</code> 的输入</td></tr>
+    <tr><td>未设字体致命错误</td><td>抛出友好 <code>No font has been set</code></td></tr>
+    <tr><td><code>$_SERVER['HTTP_USER_AGENT']</code> 未定义</td><td>已做 isset 守卫（CLI 友好）</td></tr>
+    <tr><td><code>mbstring.func_overload</code></td><td>强制 (int) 转换，PHP 8.0+ 安全</td></tr>
+    <tr><td><code>utf8_encode</code> 弃用</td><td>自实现 Latin-1→UTF-8，无依赖无告警</td></tr>
+    <tr><td>PDF 字符串中的 null 字节</td><td><code>_escape</code> 主动剔除，防 PDF 损坏</td></tr>
+    <tr><td><code>$font['subsetted']</code> 未定义键</td><td>改用 <code>!empty()</code> 判断</td></tr>
+    <tr><td>内嵌字体流压缩标记不一致</td><td>声明 <code>FlateDecode</code> 时真正 <code>gzcompress</code>（否则阅读器报错、整页空白）</td></tr>
+  </table>
+  <p class="note">安全建议：<code>AddFontTTF</code> / <code>Image</code> / <code>Output('F')</code> 的路径不要直接拼接用户输入；元数据建议限制长度。</p>
+
+  <h2>7. 常见问题</h2>
+  <p><b>Q：中文显示成方块/空白？</b><br>
+  A：用路线 B（<code>AddGBFont</code>）说明阅读器缺 Adobe 亚洲字体，请改用路线 A（<code>AddFontTTF</code> 内嵌）；已是路线 A 则检查字体路径与字形覆盖。</p>
+  <p><b>Q：UTF-8 源码如何输出中文？</b><br>
+  A：用路线 A（<code>AddFontTTF</code>）直接传 UTF-8，无需转码；只有坚持用路线 B 才需要 <code>iconv('UTF-8','GBK', $s)</code>。</p>
+  <p><b>Q：内嵌字体后文件有多大？</b><br>
+  A：glyf 字体子集化后一般几十 KB；CFF 字体当前整字体嵌入，可达 10MB+，在意体积请选 glyf 字体。</p>
+  <p><b>Q：PDF 里文字能复制/搜索吗？</b><br>
+  A：能。内嵌字体自动带 ToUnicode 映射（<code>pdffonts</code> 显示 <code>uni=yes</code>），复制出来是正确 UTF-8。</p>
+  <p><b>Q：emoji / 生僻字能显示吗？</b><br>
+  A：取决于字体是否包含该字形；缺字形时留空不报错，其余文字正常。</p>
+
+  <h2>8. 示例索引（examples/）</h2>
+  <table>
+    <tr><th>示例</th><th>内容</th><th>路线</th></tr>
+    <tr><td><code>01_quote</code> ~ <code>10_report</code></td><td>报价单 / Markdown / 证书 / 目录 / 在职证明 / 合同 / 成绩单 / 邀请函 / 收据 / 报表</td><td>B（GB）</td></tr>
+    <tr><td><code>11_ttf_utf8.php</code></td><td><b>UTF-8 原生 + TrueType 内嵌字体入门</b></td><td><b>A</b></td></tr>
+    <tr><td><code>12_ttf_advanced.php</code></td><td><b>内嵌字体进阶（AddFontFromStream / 多字号 / 双语）</b></td><td><b>A</b></td></tr>
+  </table>
+  <p class="meta">运行：<code>php examples/01_quote.php</code>，输出在 <code>examples/output/</code>。完整文档见《说明书.md》，演进计划见 <code>next.md</code>。</p>
+
+</div>
+</body>
+</html>
