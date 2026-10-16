@@ -1,0 +1,19 @@
+文泉驿微米黑（WenQuanYi Micro Hei）采用 **Apache License 2.0** 与 **GNU GPL v3（附字体嵌入例外条款）** 双许可模式。以下是许可信息文件原文的获取方式及核心内容。
+
+### wqy-microhei.ttf许可文件原文获取
+
+*   **Apache License 2.0 全文**：`LICENSE_Apache2.txt`，共122行，约10KB。可直接下载：[sources.debian.org/data/main/f/fonts-wqy-microhei/0.2.0-beta-3.1/LICENSE_Apache2.txt](https://sources.debian.org/data/main/f/fonts-wqy-microhei/0.2.0-beta-3.1/LICENSE_Apache2.txt)。
+*   **GNU GPL v3 全文**：`LICENSE_GPLv3.txt`，共424行。可直接下载：[sources.debian.org/data/main/f/fonts-wqy-microhei/0.2.0-beta-3.1/LICENSE_GPLv3.txt](https://sources.debian.org/data/main/f/fonts-wqy-microhei/0.2.0-beta-3.1/LICENSE_GPLv3.txt)。
+
+### 核心许可条款摘要
+
+**Apache License 2.0 部分**（摘自 Debian 版权文件）：
+> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0. Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+**GPL v3 部分及字体嵌入例外**：
+> This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+> As a special exception, if you create a document which uses this font, and embed this font or unaltered portions of this font into the document, this font does not by itself cause the resulting document to be covered by the GNU General Public License.
+
+### 版权声明
+
+字体版权由 **Google Corporation**（2007）与 **文泉驿项目受托委员会**（2008-2009）共同持有，部分标点符号来源于 Ume-Font（东京大学 Wada 实验室等）。
